@@ -31,7 +31,9 @@ const CharacterModal = ({ character, onClose }: any) => {
             <div className="bg-white p-8 rounded-lg max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold">{character.name}</h2>
-                    <button onClick={onClose}>&times;</button>
+                    <button className="py-1 px-2 rounded hover:bg-slate-50" onClick={onClose}>
+                        &times;
+                    </button>
                 </div>
                 <img src={character.image} alt={character.name} className="w-full h-auto mb-4" />
                 <div>Status: {character.status}</div>
