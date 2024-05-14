@@ -1,41 +1,13 @@
 import { useState, useEffect } from 'react';
-import CharacterCard from './components/CharacterCard';
-import CharacterModal from './components/CharacterModal';
-import { getCharacter, getCharacterFilter } from './components/service/RickAndMortyApi';
-import CustomSelect from './components/Select';
 
-const statusOptions = [
-    { value: '', label: 'All status' },
-    { value: 'alive', label: 'Alive' },
-    { value: 'dead', label: 'Dead' },
-    { value: 'unknown', label: 'Unknown' },
-];
+import { CharacterCard, CharacterModal, CustomSelect } from './components';
 
-const genderOptions = [
-    { value: '', label: 'All gender' },
-    { value: 'Female', label: 'Female' },
-    { value: 'Male', label: 'Male' },
-    { value: 'Genderless', label: 'Genderless' },
-    { value: 'unknown', label: 'Unknown' },
-];
-
-const speciesOptions = [
-    { value: '', label: 'All species' },
-    { value: 'human', label: 'Human' },
-    { value: 'alien', label: 'Alien' },
-    { value: 'humanoid', label: 'Humanoid' },
-    { value: 'poopybutthole', label: 'Poopybutthole' },
-    { value: 'mythological', label: 'Mythological' },
-    { value: 'unknown', label: 'Unknown' },
-    { value: 'animal', label: 'Animal' },
-    { value: 'disease', label: 'Disease' },
-    { value: 'robot', label: 'Robot' },
-    { value: 'cronenberg', label: 'Cronenberg' },
-    { value: 'planet', label: 'Planet' },
-];
+import { Character } from './types/types';
+import { getCharacter, getCharacterFilter } from './service/RickAndMortyApi';
+import { genderOptions, speciesOptions, statusOptions } from './data/rickAndMortyOptions';
 
 const App = () => {
-    const [characters, setCharacters] = useState([]);
+    const [characters, setCharacters] = useState<Character[]>([]);
     const [status, setStatus] = useState('');
     const [name, setName] = useState('');
     const [species, setSpecies] = useState('');
@@ -43,30 +15,84 @@ const App = () => {
     const [filteredCharacters, setFilteredCharacters] = useState([]);
     const [page, setPage] = useState(1);
     const [error, setError] = useState('');
-
-    const [selectedCharacter, setSelectedCharacter] = useState(null);
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
     useEffect(() => {
-        getCharacter().then((response) => {
+        getCharacter(page).then((response) => {
+            setCharacters(response.results);
             setCharacters(response.results);
         });
-    }, []);
-    useEffect(() => {}, []);
+    }, [page]);
 
-    const handleCharacterClick = (character: any) => {
+    useEffect(() => {
+        getCharacterFilter(name, status, species, gender, page)
+            .then((response) => {
+                setFilteredCharacters(response.results);
+            })
+            .catch((error) => setError(error));
+    }, [page]);
+
+    const sortCharacters = (characters: Character[]) => {
+        return characters.slice().sort((a, b) => {
+            const nameA = a.name.toUpperCase();
+            const nameB = b.name.toUpperCase();
+            if (nameA < nameB) {
+                return sortOrder === 'asc' ? -1 : 1;
+            }
+            if (nameA > nameB) {
+                return sortOrder === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+    };
+
+    const handleNextPage = () => {
+        setPage(page + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (page >= 2) setPage(page - 1);
+    };
+
+    const handleCharacterClick = (character: Character) => {
         setSelectedCharacter(character);
     };
 
     const handleCloseModal = () => {
         setSelectedCharacter(null);
     };
+
     const handleOnclickSearch = () => {
         setError('');
-        getCharacterFilter(name, status, species, gender, page)
-            .then((response) => {
-                setFilteredCharacters(response.results);
-            })
-            .catch((error) => setError(error));
+        if (name || status || species || gender) {
+            getCharacterFilter(name, status, species, gender, page)
+                .then((response) => {
+                    setFilteredCharacters(response.results);
+                })
+                .catch((error) => setError(error));
+        } else {
+            getCharacter(1).then((response) => {
+                setCharacters(response.results);
+            });
+        }
+    };
+
+    const handleSortChange = () => {
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    };
+
+    const onStatusChange = (selectedOption: string) => {
+        setPage(1);
+        setStatus(selectedOption);
+    };
+    const onGenderChange = (selectedOption: string) => {
+        setPage(1);
+        setGender(selectedOption);
+    };
+    const onSpeciesChange = (selectedOption: string) => {
+        setPage(1);
+        setSpecies(selectedOption);
     };
 
     return (
@@ -82,39 +108,51 @@ const App = () => {
                     }}
                     className="min-w-48 border border-gray-300 rounded-md px-4 py-2"
                 />
-                <CustomSelect
-                    nameOption={'status'}
-                    options={statusOptions}
-                    onSelect={(selectedOption: any) => setStatus(selectedOption)}
-                />
-                <CustomSelect
-                    nameOption={'gender'}
-                    options={genderOptions}
-                    onSelect={(selectedOption: any) => setGender(selectedOption)}
-                />
-                <CustomSelect
-                    nameOption={'species'}
-                    options={speciesOptions}
-                    onSelect={(selectedOption: any) => setSpecies(selectedOption)}
-                />
+                <CustomSelect nameOption={'status'} options={statusOptions} onSelect={onStatusChange} />
+                <CustomSelect nameOption={'gender'} options={genderOptions} onSelect={onGenderChange} />
+                <CustomSelect nameOption={'species'} options={speciesOptions} onSelect={onSpeciesChange} />
                 <button
                     className="min-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     onClick={handleOnclickSearch}
                 >
                     Search
                 </button>
+                <button
+                    className="min-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={handleSortChange}
+                >
+                    {`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+                </button>
             </div>
+            <div className="flex justify-between">
+                <button
+                    disabled={page === 1}
+                    className="min-w-48 bg-blue-500 disabled:bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={handlePrevPage}
+                >
+                    Previous Page
+                </button>
+                <button
+                    className="min-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={handleNextPage}
+                >
+                    Next Page
+                </button>
+            </div>
+
             {error ? (
                 <p className="text-center">Not found</p>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {(filteredCharacters.length ? filteredCharacters : characters).map((character: any) => (
-                        <CharacterCard
-                            key={character.id}
-                            character={character}
-                            onClick={() => handleCharacterClick(character)}
-                        />
-                    ))}
+                    {(filteredCharacters.length ? sortCharacters(filteredCharacters) : sortCharacters(characters)).map(
+                        (character: Character) => (
+                            <CharacterCard
+                                key={character.id}
+                                character={character}
+                                onClick={() => handleCharacterClick(character)}
+                            />
+                        )
+                    )}
                 </div>
             )}
             {selectedCharacter && <CharacterModal character={selectedCharacter} onClose={handleCloseModal} />}

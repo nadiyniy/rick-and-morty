@@ -1,4 +1,6 @@
-const CharacterCard = ({ character, onClick }: any) => {
+import { CharacterCardProps } from '../types/types';
+
+const CharacterCard = ({ character, onClick }: CharacterCardProps) => {
     return (
         <div className="relative first-line:relative bg-gray-100 p-4  rounded-lg cursor-pointer" onClick={onClick}>
             <div

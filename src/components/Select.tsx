@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { CustomSelectProps, Option } from '../types/types';
 
-const CustomSelect = ({ options, onSelect, nameOption }: any) => {
+const CustomSelect = ({ options, onSelect, nameOption }: CustomSelectProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState('');
 
@@ -10,15 +11,15 @@ const CustomSelect = ({ options, onSelect, nameOption }: any) => {
         setIsOpen(!isOpen);
     };
 
-    const handleSelectOption = (option: any) => {
+    const handleSelectOption = (option: Option) => {
         setSelectedOption(option.label);
         setIsOpen(false);
         onSelect(option.value);
     };
 
     useEffect(() => {
-        const handleClickOutside = (event: any) => {
-            if (selectRef.current && !selectRef.current.contains(event.target)) {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         };
@@ -51,7 +52,7 @@ const CustomSelect = ({ options, onSelect, nameOption }: any) => {
             </button>
             {isOpen && (
                 <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
-                    {options.map((option: any) => (
+                    {options.map((option) => (
                         <button
                             key={option.value}
                             onClick={() => handleSelectOption(option)}
