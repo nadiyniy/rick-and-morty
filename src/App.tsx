@@ -25,14 +25,6 @@ const App = () => {
         });
     }, [page]);
 
-    useEffect(() => {
-        getCharacterFilter(name, status, species, gender, page)
-            .then((response) => {
-                setFilteredCharacters(response.results);
-            })
-            .catch((error) => setError(error));
-    }, [page]);
-
     const sortCharacters = (characters: Character[]) => {
         return characters.slice().sort((a, b) => {
             const nameA = a.name.toUpperCase();
@@ -65,17 +57,11 @@ const App = () => {
 
     const handleOnclickSearch = () => {
         setError('');
-        if (name || status || species || gender) {
-            getCharacterFilter(name, status, species, gender, page)
-                .then((response) => {
-                    setFilteredCharacters(response.results);
-                })
-                .catch((error) => setError(error));
-        } else {
-            getCharacter(1).then((response) => {
-                setCharacters(response.results);
-            });
-        }
+        getCharacterFilter(name, status, species, gender, page)
+            .then((response) => {
+                setFilteredCharacters(response.results);
+            })
+            .catch((error) => setError(error));
     };
 
     const handleSortChange = () => {
@@ -126,14 +112,15 @@ const App = () => {
             </div>
             <div className="flex justify-between">
                 <button
-                    disabled={page === 1}
+                    disabled={page === 1 || filteredCharacters.length !== 0}
                     className="min-w-48 bg-blue-500 disabled:bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     onClick={handlePrevPage}
                 >
                     Previous Page
                 </button>
                 <button
-                    className="min-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    disabled={filteredCharacters.length !== 0}
+                    className="min-w-48 bg-blue-500 disabled:bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     onClick={handleNextPage}
                 >
                     Next Page
