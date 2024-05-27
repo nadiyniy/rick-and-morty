@@ -5,7 +5,16 @@ import { CharacterCard, CharacterModal, CustomSelect } from './components';
 import { Character } from './types/types';
 import { getCharacter, getCharacterFilter } from './service/RickAndMortyApi';
 import { genderOptions, speciesOptions, statusOptions } from './data/rickAndMortyOptions';
+import { createClient } from 'contentful';
 
+export const fetchCarWashing = async () => {
+    const credentials = {
+        space: import.meta.env.VITE_CONTENTFUL_SPACE_ID,
+        accessToken: import.meta.env.VITE_CONTENTFUL_ACCESS_TOKEN,
+    };
+    const client = createClient(credentials);
+    return await client.getEntries({ content_type: 'carWashingCoordinate' });
+};
 const App = () => {
     const [characters, setCharacters] = useState<Character[]>([]);
     const [status, setStatus] = useState('');
@@ -17,6 +26,12 @@ const App = () => {
     const [error, setError] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
     const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+
+    const [сarWashing, setCarWashing] = useState();
+    useEffect(() => {
+        fetchCarWashing().then((res: any) => setCarWashing(res));
+    }, []);
+    console.log(сarWashing);
 
     useEffect(() => {
         getCharacter(page).then((response) => {
